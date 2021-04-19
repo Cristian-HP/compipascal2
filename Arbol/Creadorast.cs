@@ -1,6 +1,7 @@
 ﻿using compipascal2.Abstract;
 using compipascal2.Expresiones.Access;
 using compipascal2.Expresiones.Arimeticas;
+using compipascal2.Expresiones.Assignment;
 using compipascal2.Expresiones.Literal;
 using compipascal2.Expresiones.Logicas;
 using compipascal2.Expresiones.Relacional;
@@ -150,6 +151,12 @@ namespace compipascal2.Arbol
                     else if (aux2.Token.Text.Equals("boolean", StringComparison.InvariantCultureIgnoreCase))
                         return new Utils.Type(Utils.Types.BOOLEAN, "");
                 }
+            }
+            else if (equalnode(current, "ASIGN"))
+            {
+                Expresion valor = (Expresion)analisisnodo(current.ChildNodes[2]);
+                AssignmentId tar = new AssignmentId(obtenerid(current.ChildNodes[0]).ToLower(),null, current.ChildNodes[0].Token.Location.Line, current.ChildNodes[0].Token.Location.Column);
+                return new Asignacion(tar,valor, current.ChildNodes[0].Token.Location.Line, current.ChildNodes[0].Token.Location.Column);
             }
             else if (equalnode(current, "MAIN"))
             {
