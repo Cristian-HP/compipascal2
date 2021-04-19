@@ -251,6 +251,12 @@ namespace compipascal2.Arbol
                     return new While(valor, instrucciones,  current.ChildNodes[0].Token.Location.Line, current.ChildNodes[0].Token.Location.Column);
                 }
             }
+            else if (equalnode(current, "REP"))
+            {
+                Expresion condi = (Expresion)analisisnodo(current.ChildNodes[3]);
+                LinkedList<Instruccion> instrucciones = (LinkedList<Instruccion>)analisisnodo(current.ChildNodes[1]);
+                return new Repeat(condi, instrucciones, current.ChildNodes[0].Token.Location.Line, current.ChildNodes[0].Token.Location.Column);
+            }
             else if (equalnode(current, "BEGIN"))
             {
                 return analisisnodo(current.ChildNodes[1]);
