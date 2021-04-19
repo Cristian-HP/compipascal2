@@ -10,8 +10,6 @@ namespace compipascal2.Instrucciones.Variables
 {
     class Asignacion : Instruccion
     {
-        public string labeltrue { get; set; }
-        public string labelfalse { get;set; }
         public int Linea { get;set; }
         public int Columna { get;set; }
 
@@ -32,10 +30,14 @@ namespace compipascal2.Instrucciones.Variables
             Retorno valor = this.valor.resolver(ent);
             Generator generator = Generator.getInstance();
             Simbolo symbol = target.symbol;
-            if(target.type == valor.type)
+            if (!this.sameType(target.type, valor.type))
+            {
+                throw new Errorp(Linea, Columna, "Semantico", "No es posible asignar el tipo " + valor.type.type + " al tipo " + target.type.type, ent.nombre);
+            }
+            /*if(target.type != valor.type)
             {
                 throw new Errorp(Linea, Columna, "Semantico", "No es posible asignar el tipo "+valor.type.type +" al tipo "+target.type.type, ent.nombre);
-            }
+            }*/
             // para los array
 
             if(symbol == null || symbol.isHeap)
@@ -75,5 +77,25 @@ namespace compipascal2.Instrucciones.Variables
 
             return null;
         }
+
+
+        private bool sameType(Utils.Type type1,Utils.Type type2)
+        {
+            if(type1.type == type2.type)
+            {
+                if(type1.type == Types.OBJECT)
+                {
+                    return type1.idtype.Equals(type2.idtype, StringComparison.InvariantCultureIgnoreCase) && type1.dimension == type2.dimension;
+
+                }
+                return type1.dimension == type2.dimension;
+            }else if(type1.type == Types.OBJECT || type2.type == Types.OBJECT)
+            {
+                return type1.dimension > 0;
+            }
+            return false;
+        }
+
+
     }
 }

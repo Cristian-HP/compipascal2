@@ -41,6 +41,7 @@ namespace compipascal2
             this.richTextBox1.Size = new System.Drawing.Size(562, 492);
             this.richTextBox1.TabIndex = 0;
             this.richTextBox1.Text = "";
+            this.richTextBox1.WordWrap = false;
             // 
             // button1
             // 

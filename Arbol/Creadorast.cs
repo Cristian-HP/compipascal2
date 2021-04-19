@@ -6,6 +6,7 @@ using compipascal2.Expresiones.Literal;
 using compipascal2.Expresiones.Logicas;
 using compipascal2.Expresiones.Relacional;
 using compipascal2.Instrucciones;
+using compipascal2.Instrucciones.Control;
 using compipascal2.Instrucciones.Variables;
 using compipascal2.SymbolTable;
 using Irony.Parsing;
@@ -181,6 +182,78 @@ namespace compipascal2.Arbol
                 if (current.ChildNodes[0].Token.Text.Equals("writeln", StringComparison.InvariantCultureIgnoreCase))
                     jump = true;
                 return new Writeln((LinkedList<Expresion>)analisisnodo(current.ChildNodes[2]), jump, current.ChildNodes[0].Token.Location.Line, current.ChildNodes[0].Token.Location.Column);
+            }
+            else if (equalnode(current, "IF"))
+            {
+                if (current.ChildNodes.Count == 4)
+                {
+                    if (current.ChildNodes[3].Term.Name.Equals("INST", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        LinkedList<Instruccion> instrucciones = new LinkedList<Instruccion>();
+                        Expresion valor = (Expresion)analisisnodo(current.ChildNodes[1]);
+                        Instruccion instrucc = (Instruccion)analisisnodo(current.ChildNodes[3]);
+                        instrucciones.AddLast(instrucc);
+                        return new If(valor, instrucciones, null, current.ChildNodes[0].Token.Location.Line, current.ChildNodes[0].Token.Location.Column);
+                    }
+                    else
+                    {
+                        LinkedList<Instruccion> instrucciones = (LinkedList<Instruccion>)analisisnodo(current.ChildNodes[3]);
+                        Expresion valor = (Expresion)analisisnodo(current.ChildNodes[1]);
+                        return new If(valor, instrucciones, null, current.ChildNodes[0].Token.Location.Line, current.ChildNodes[0].Token.Location.Column);
+                    }
+                }
+                else if (current.ChildNodes.Count == 5)
+                {
+                    LinkedList<Instruccion> instrucciones = new LinkedList<Instruccion>();
+                    Expresion valor = (Expresion)analisisnodo(current.ChildNodes[1]);
+                    Instruccion instrucc = (Instruccion)analisisnodo(current.ChildNodes[3]);
+                    instrucciones.AddLast(instrucc);
+                    Instruccion inselse = (Instruccion)analisisnodo(current.ChildNodes[4]);
+                    return new If(valor, instrucciones, inselse, current.ChildNodes[0].Token.Location.Line, current.ChildNodes[0].Token.Location.Column);
+                }
+                else
+                {
+                    LinkedList<Instruccion> instrucciones = (LinkedList<Instruccion>)analisisnodo(current.ChildNodes[4]);
+                    Expresion valor = (Expresion)analisisnodo(current.ChildNodes[1]);
+                    Instruccion inselse = (Instruccion)analisisnodo(current.ChildNodes[6]);
+                    return new If(valor, instrucciones, inselse, current.ChildNodes[0].Token.Location.Line, current.ChildNodes[0].Token.Location.Column);
+                }
+            }
+            else if (equalnode(current, "ELSE"))
+            {
+                if (current.ChildNodes[1].Term.Name.Equals("INST", StringComparison.InvariantCulture))
+                {
+                    LinkedList<Instruccion> instrucciones = new LinkedList<Instruccion>();
+                    Instruccion instrucc = (Instruccion)analisisnodo(current.ChildNodes[1]);
+                    instrucciones.AddLast(instrucc);
+                    return new Else(instrucciones, current.ChildNodes[0].Token.Location.Line, current.ChildNodes[0].Token.Location.Column);
+                }
+                else
+                {
+                    LinkedList<Instruccion> instrucciones = (LinkedList<Instruccion>)analisisnodo(current.ChildNodes[1]);
+                    return new Else(instrucciones, current.ChildNodes[0].Token.Location.Line, current.ChildNodes[0].Token.Location.Column);
+                }
+            }
+            else if (equalnode(current, "WL"))
+            {
+                if (current.ChildNodes[3].Term.Name.Equals("INST", StringComparison.InvariantCulture))
+                {
+                    LinkedList<Instruccion> instrucciones = new LinkedList<Instruccion>();
+                    Instruccion instrucc = (Instruccion)analisisnodo(current.ChildNodes[3]);
+                    Expresion valor = (Expresion)analisisnodo(current.ChildNodes[1]);
+                    instrucciones.AddLast(instrucc);
+                    return new While(valor,instrucciones, current.ChildNodes[0].Token.Location.Line, current.ChildNodes[0].Token.Location.Column);
+                }
+                else
+                {
+                    LinkedList<Instruccion> instrucciones = (LinkedList<Instruccion>)analisisnodo(current.ChildNodes[3]);
+                    Expresion valor = (Expresion)analisisnodo(current.ChildNodes[1]);
+                    return new While(valor, instrucciones,  current.ChildNodes[0].Token.Location.Line, current.ChildNodes[0].Token.Location.Column);
+                }
+            }
+            else if (equalnode(current, "BEGIN"))
+            {
+                return analisisnodo(current.ChildNodes[1]);
             }
             else if (equalnode(current, "L_EXP"))
             {

@@ -18,11 +18,12 @@ namespace compipascal2.Utils
     {
         public Types type;
         public string idtype;
-
-        public Type(Types type, string idtype="")
+        public int dimension;
+        public Type(Types type, string idtype="",int dimension = 0)
         {
             this.type = type;
             this.idtype = idtype;
+            this.dimension = 0;
         }
     }
 }
