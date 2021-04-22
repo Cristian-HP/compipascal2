@@ -28,30 +28,39 @@ namespace compipascal2.Instrucciones.Control
         public object generar(Entorno ent)
         {
             Generator generator = Generator.getInstance();
-            generator.addComment("Inicia IF");
-            Retorno condicion = this.condicion.resolver(ent);
-            if(condicion.type.type == Types.BOOLEAN)
+            try
             {
-                generator.addLabel(condicion.Labeltrue);
-                foreach(Instruccion ints in instrucciones)
+                generator.addComment("Inicia IF");
+                Retorno condicion = this.condicion.resolver(ent);
+                if (condicion.type.type == Types.BOOLEAN)
                 {
-                    ints.generar(ent);
+                    generator.addLabel(condicion.Labeltrue);
+                    foreach (Instruccion ints in instrucciones)
+                    {
+                        ints.generar(ent);
+                    }
+                    if (this._else != null)
+                    {
+                        string temlabel = generator.newLabel();
+                        generator.addGoto(temlabel);
+                        generator.addLabel(condicion.Labelfalse);
+                        this._else.generar(ent);
+                        generator.addLabel(temlabel);
+                    }
+                    else
+                    {
+                        generator.addLabel(condicion.Labelfalse);
+                    }
+                    return null;
                 }
-                if(this._else != null)
-                {
-                    string temlabel = generator.newLabel();
-                    generator.addGoto(temlabel);
-                    generator.addLabel(condicion.Labelfalse);
-                    this._else.generar(ent);
-                    generator.addLabel(temlabel);
-                }
-                else
-                {
-                    generator.addLabel(condicion.Labelfalse);
-                }
+                throw new Errorp(Linea, Columna, "Semantico", "La Condicion no es de tipo booleana sino de tipo" + condicion.type.type, ent.nombre);
+            }
+            catch(Exception ex)
+            {
+                Form1.salida.AppendText(ex.ToString());
                 return null;
             }
-            throw new Errorp(Linea, Columna, "Semantico", "La Condicion no es de tipo booleana sino de tipo" + condicion.type.type, ent.nombre);
+            
         }
     }
 }

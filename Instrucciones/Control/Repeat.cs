@@ -26,22 +26,35 @@ namespace compipascal2.Instrucciones.Control
         public object generar(Entorno ent)
         {
             Generator generator = Generator.getInstance();
-            generator.addComment("Inicia Repeat");
-            ent.continue1 = this.condicion.labeltrue = generator.newLabel();
-            ent.break1 = this.condicion.labelfalse = generator.newLabel();
-            generator.addLabel(this.condicion.labelfalse);
-            foreach(Instruccion inst in instrucciones)
+            try
             {
-                inst.generar(ent);
+                generator.addComment("Inicia Repeat");
+                this.condicion.labeltrue = generator.newLabel();
+                ent.continue1.Push(this.condicion.labeltrue);
+                this.condicion.labelfalse = generator.newLabel();
+                ent.break1.Push(this.condicion.labelfalse);
+                generator.addLabel(this.condicion.labelfalse);
+                foreach (Instruccion inst in instrucciones)
+                {
+                    inst.generar(ent);
+                }
+                Retorno condicion = this.condicion.resolver(ent);
+                if (condicion.type.type == Types.BOOLEAN)
+                {
+                    generator.addLabel(condicion.Labeltrue);
+                    generator.addComment("Finaliza Repeat");
+                    ent.break1.Pop();
+                    ent.continue1.Pop();
+                    return null;
+                }
+                throw new Errorp(Linea, Columna, "Semantico", "La condicion del While no es de tipo booleana sino de ->" + condicion.type.type, ent.nombre);
             }
-            Retorno condicion = this.condicion.resolver(ent);
-            if(condicion.type.type == Types.BOOLEAN)
+            catch(Exception ex)
             {
-                generator.addLabel(condicion.Labeltrue);
-                generator.addComment("Finaliza Repeat");
+                Form1.salida.AppendText(ex.ToString());
                 return null;
             }
-            throw new Errorp(Linea, Columna, "Semantico", "La condicion del While no es de tipo booleana sino de ->" + condicion.type.type, ent.nombre);
+            
         }
     }
 }

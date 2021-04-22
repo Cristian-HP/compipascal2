@@ -1,6 +1,8 @@
 ﻿using compipascal2.Abstract;
 using compipascal2.Arbol;
 using compipascal2.Generador;
+using compipascal2.Instrucciones.Funciones;
+using compipascal2.Instrucciones.Variables;
 using compipascal2.SymbolTable;
 using compipascal2.Utils;
 using Irony.Parsing;
@@ -66,12 +68,42 @@ namespace compipascal2.Analisis
             Creadorast arbolgenerado = new Creadorast(tree);
             AST ast = arbolgenerado.mytree;
             Entorno ent = new Entorno(null,"GLOBAL");
-            if(ast != null)
+            string funciones = "";
+            string declara = "";
+            if (ast != null)
             {
                 Generator.getInstance().clearCode();
-                foreach(Instruccion inst in ast.instrucciones)
+                foreach(Instruccion func in ast.instrucciones)
                 {
-                    inst.generar(ent);
+                    if(func is Funcion)
+                    {
+                        func.generar(ent);
+                    }
+                }
+                foreach (Instruccion func in ast.instrucciones)
+                {
+                    if (func is Declaracion)
+                    {
+                        func.generar(ent);
+                    }
+                }
+                declara = Generator.getInstance().getCode();
+                Generator.getInstance().NewCode();
+                foreach (Instruccion inst in ast.instrucciones)
+                {
+                    if(inst is Funcion)
+                    {
+                        inst.generar(ent);
+                    }
+                }
+                funciones = Generator.getInstance().getCode();
+                Generator.getInstance().NewCode();
+                foreach (Instruccion inst in ast.instrucciones)
+                {
+                    if(!(inst is Funcion || inst is Declaracion))
+                    {
+                        inst.generar(ent);
+                    }
                 }
             }
             string encabezado = Generator.getInstance().getEncabezado();
@@ -82,7 +114,9 @@ namespace compipascal2.Analisis
             Form1.salida.AppendText(encabezado);
             Form1.salida.AppendText(tempo);
             Form1.salida.AppendText(nativas);
+            Form1.salida.AppendText(funciones);
             Form1.salida.AppendText(strmain);
+            Form1.salida.AppendText(declara);
             Form1.salida.AppendText(C3D);
             Form1.salida.AppendText("return 0; \n }");
         }

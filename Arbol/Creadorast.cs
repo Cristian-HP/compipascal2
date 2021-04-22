@@ -7,8 +7,11 @@ using compipascal2.Expresiones.Logicas;
 using compipascal2.Expresiones.Relacional;
 using compipascal2.Instrucciones;
 using compipascal2.Instrucciones.Control;
+using compipascal2.Instrucciones.Funciones;
+using compipascal2.Instrucciones.Tranferencia;
 using compipascal2.Instrucciones.Variables;
 using compipascal2.SymbolTable;
+using compipascal2.Utils;
 using Irony.Parsing;
 using System;
 using System.Collections.Generic;
@@ -36,7 +39,7 @@ namespace compipascal2.Arbol
             if (equalnode(current, "INICIO"))
             {
                 LinkedList<Instruccion> temp = (LinkedList<Instruccion>)analisisnodo(current.ChildNodes[0]);
-                //LinkedList<Funcion> funciones = new LinkedList<Funcion>();
+                LinkedList<Funcion> funciones = new LinkedList<Funcion>();
                 //LinkedList<Metodo> metodos = new LinkedList<Metodo>();
                 LinkedList<Instruccion> instrucciones = new LinkedList<Instruccion>();
                 foreach (Instruccion inst in temp)
@@ -45,10 +48,6 @@ namespace compipascal2.Arbol
                     {
                         funciones.AddLast((Funcion)inst);
                     }
-                    else if (inst is Metodo)
-                    {
-                        metodos.AddLast((Metodo)inst);
-                    }
                     else
                     {
                         instrucciones.AddLast(inst);
@@ -56,7 +55,7 @@ namespace compipascal2.Arbol
                     instrucciones.AddLast(inst);
                 }
                 //return new AST(instrucciones, funciones, metodos);
-                return new AST(instrucciones);
+                return new AST(instrucciones,funciones);
             }
             else if (equalnode(current, "PROGRAM"))
             {
@@ -98,6 +97,10 @@ namespace compipascal2.Arbol
             {
                 return new Group((LinkedList<Instruccion>)analisisnodo(current.ChildNodes[1]));
             }
+            else if (equalnode(current, "CONSTANTE_GLO"))
+            {
+                return new Group((LinkedList<Instruccion>)analisisnodo(current.ChildNodes[1]));
+            }
             else if (equalnode(current, "LISTA_VARIABLE"))
             {
                 LinkedList<Instruccion> lisdecla = new LinkedList<Instruccion>();
@@ -106,6 +109,164 @@ namespace compipascal2.Arbol
                     lisdecla.AddLast((Instruccion)analisisnodo(hijo));
                 }
                 return lisdecla;
+            }
+            else if (equalnode(current, "LISTA_FUNPRO"))
+            {
+                LinkedList<Instruccion> funopro = new LinkedList<Instruccion>();
+                foreach (ParseTreeNode hijo in current.ChildNodes)
+                {
+                    funopro.AddLast((Instruccion)analisisnodo(hijo));
+                }
+                return new Group(funopro);
+            }
+            else if (equalnode(current, "FUNPRO"))
+            {
+                return analisisnodo(current.ChildNodes[0]);
+            }
+            else if (equalnode(current, "PROCEDIMIENTO"))
+            {
+                string idfun = current.ChildNodes[1].Token.Text.ToLower();
+                LinkedList<Instruccion> instrucciones;
+                int linea = current.ChildNodes[0].Token.Location.Line;
+                int columna = current.ChildNodes[0].Token.Location.Column;
+                Utils.Type tipomet = new Utils.Type(Utils.Types.VOID, "");
+                //termino de la declaracion
+                if (current.ChildNodes.Count == 7)
+                {
+                    LinkedList<Param> parametros = (LinkedList<Param>)analisisnodo(current.ChildNodes[3]);
+                    instrucciones = (LinkedList<Instruccion>)analisisnodo(current.ChildNodes[6]);
+                    return new Funcion(idfun, tipomet,instrucciones,parametros,linea,columna);
+                }
+                else if (current.ChildNodes.Count == 6)
+                {
+                    instrucciones = (LinkedList<Instruccion>)analisisnodo(current.ChildNodes[5]);
+                    return new Funcion(idfun,tipomet,instrucciones,new LinkedList<Param>(),linea,columna);
+                }
+                else
+                {
+                    instrucciones = (LinkedList<Instruccion>)analisisnodo(current.ChildNodes[3]);
+                    return new Funcion(idfun,tipomet,instrucciones,new LinkedList<Param>(),linea,columna);
+                }
+            }
+            else if (equalnode(current, "FUNCIONES"))
+            {
+                string idfun = current.ChildNodes[1].Token.Text.ToLower();
+                Utils.Type tipofun;
+                LinkedList<Instruccion> instrucciones;
+                int linea = current.ChildNodes[0].Token.Location.Line;
+                int columna = current.ChildNodes[0].Token.Location.Column;
+                if (current.ChildNodes.Count == 9)
+                {
+                    tipofun = (Utils.Type)analisisnodo(current.ChildNodes[6]);
+                    LinkedList<Param> parametros = (LinkedList<Param>)analisisnodo(current.ChildNodes[3]);
+                    instrucciones = (LinkedList<Instruccion>)analisisnodo(current.ChildNodes[8]);
+                    return new Funcion(idfun,tipofun,instrucciones,parametros,linea,columna);
+                }
+                else if (current.ChildNodes.Count == 8)
+                {
+                    tipofun = (Utils.Type)analisisnodo(current.ChildNodes[5]);
+                    instrucciones = (LinkedList<Instruccion>)analisisnodo(current.ChildNodes[7]);
+                    return new Funcion(idfun,tipofun,instrucciones,new LinkedList<Param>(),linea,columna);
+                }
+                else
+                {
+                    tipofun = (Utils.Type)analisisnodo(current.ChildNodes[3]);
+                    instrucciones = (LinkedList<Instruccion>)analisisnodo(current.ChildNodes[5]);
+                    return new Funcion(idfun,tipofun,instrucciones,new LinkedList<Param>(),linea,columna);
+
+                }
+            }
+            else if (equalnode(current, "L_PARAM"))
+            {
+                LinkedList<Param> listaparam = new LinkedList<Param>();
+                LinkedList<Param> param;
+                foreach (ParseTreeNode hijo in current.ChildNodes)
+                {
+                    param = (LinkedList<Param>)analisisnodo(hijo);
+                    foreach (Param simbol in param)
+                    {
+                        listaparam.AddLast(simbol);
+                    }
+                }
+                return listaparam;
+            }
+            else if (equalnode(current, "PARAM"))
+            {
+                if (current.ChildNodes.Count == 4)
+                {
+                    //por referencia
+                    return null;
+                }
+                else
+                {
+                    LinkedList<Param> parametros = new LinkedList<Param>();
+                    LinkedList<string> varia = (LinkedList<string>)analisisnodo(current.ChildNodes[0]);
+                    Utils.Type tipo = (Utils.Type)analisisnodo(current.ChildNodes[2]);
+                    foreach (String auxtipo in varia)
+                    {
+                        parametros.AddLast(new Param(auxtipo.ToLower(),tipo));
+                    }
+                    return parametros;
+                }
+
+            }
+            else if (equalnode(current, "LLAMA"))
+            {
+                int linea = current.ChildNodes[0].Token.Location.Line;
+                int columna = current.ChildNodes[0].Token.Location.Column;
+                string idfun = current.ChildNodes[0].Token.Text.ToLower();
+                if (current.ChildNodes.Count == 5)
+                {
+                    LinkedList<Expresion> expresio = (LinkedList<Expresion>)analisisnodo(current.ChildNodes[2]);
+                    return new AssigmentFunct(idfun, expresio, linea, columna);
+                }
+                else if (current.ChildNodes.Count == 4)
+                {
+                    if (current.ChildNodes[3].Token.Text.Equals(")"))
+                    {
+                        LinkedList<Expresion> expresio = (LinkedList<Expresion>)analisisnodo(current.ChildNodes[2]);
+                        return new AssigmentFunct(idfun, expresio, linea, columna);
+                    }
+                    else
+                        return new AssigmentFunct(idfun, new LinkedList<Expresion>(), linea, columna);
+                }
+                else
+                {
+                    return new AssigmentFunct(idfun, new LinkedList<Expresion>(), linea, columna);
+                }
+            }
+            else if (equalnode(current, "BODY"))
+            {
+                if (current.ChildNodes.Count == 2)
+                {
+                    LinkedList<Instruccion> dec = (LinkedList<Instruccion>)analisisnodo(current.ChildNodes[0]);
+                    LinkedList<Instruccion> insts = (LinkedList<Instruccion>)analisisnodo(current.ChildNodes[1]);
+                    foreach (Instruccion inst in insts)
+                    {
+                        dec.AddLast(inst);
+                    }
+                    return dec;
+
+                }
+                else
+                {
+                    return analisisnodo(current.ChildNodes[0]);
+                }
+            }
+            else if (equalnode(current, "L_DEF"))
+            {
+                LinkedList<Instruccion> todas = new LinkedList<Instruccion>();
+                Group temlis;
+                foreach (ParseTreeNode hijo in current.ChildNodes)
+                {
+                    temlis = (Group)analisisnodo(hijo);
+                    iterarbloque(todas, temlis);
+                }
+                return todas;
+            }
+            else if (equalnode(current, "DEF"))
+            {
+                return analisisnodo(current.ChildNodes[0]);
             }
             else if (equalnode(current, "VARIABLE"))
             {
@@ -257,9 +418,138 @@ namespace compipascal2.Arbol
                 LinkedList<Instruccion> instrucciones = (LinkedList<Instruccion>)analisisnodo(current.ChildNodes[1]);
                 return new Repeat(condi, instrucciones, current.ChildNodes[0].Token.Location.Line, current.ChildNodes[0].Token.Location.Column);
             }
+            else if (equalnode(current, "FOR"))
+            {
+                int linea = current.ChildNodes[0].Token.Location.Line;
+                int columna = current.ChildNodes[0].Token.Location.Column;
+                //Id idini = new Id(obtenerid(current.ChildNodes[1]), linea, current.ChildNodes[1].Token.Location.Column);
+                string nombre = obtenerid(current.ChildNodes[1]).ToLower();
+                AssignmentId idini = new AssignmentId(nombre,null,linea,current.ChildNodes[1].Token.Location.Column);
+                Expresion inicio = (Expresion)analisisnodo(current.ChildNodes[3]);
+                Asignacion asigini = new Asignacion(idini, inicio, linea, columna);
+                Expresion idinicio = new AccessId(nombre,null,linea,columna);
+                Expresion tope = (Expresion)analisisnodo(current.ChildNodes[5]);
+                string direccion = current.ChildNodes[4].ChildNodes[0].Token.Text;
+                Expresion condicion;
+                Expresion condicionupdat = new Igualq(idinicio, tope, linea, columna);
+                Asignacion update;
+                if (direccion.ToLower() == "to")
+                {
+                    condicion = new Menorq(idinicio, tope, true, linea, columna);
+                    update = new Asignacion(idini,new Suma(idinicio,new PrimitiveL(Utils.Types.INTEGER,"1",linea,columna),linea,columna),linea,columna);
+                }
+                else
+                {
+                    condicion = new Mayorq(idinicio, tope, true, linea, columna);
+                    update = new Asignacion(idini, new Resta(idinicio, new PrimitiveL(Utils.Types.INTEGER, "1", linea, columna), linea, columna), linea, columna);
+                }
+                if (current.ChildNodes[7].Term.Name.Equals("INST", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    LinkedList<Instruccion> instrucciones = new LinkedList<Instruccion>();
+                    Instruccion instrucc = (Instruccion)analisisnodo(current.ChildNodes[7]);
+                    instrucciones.AddLast(instrucc);
+                    return new For(asigini,condicion,update,condicionupdat, instrucciones, linea, columna);
+                }
+                else
+                {
+                    LinkedList<Instruccion> instrucciones = (LinkedList<Instruccion>)analisisnodo(current.ChildNodes[7]);
+                    return new For(asigini,condicion,update,condicionupdat, instrucciones, linea, columna);
+                }
+            }
+            else if (equalnode(current, "CASE"))
+            {
+                AccessId temid = (AccessId)analisisnodo(current.ChildNodes[1]);
+                LinkedList<Case> opciones = (LinkedList<Case>)analisisnodo(current.ChildNodes[3]);
+                if (current.ChildNodes.Count == 7)
+                {
+                    Else temelse = (Else)analisisnodo(current.ChildNodes[4]);
+                    return new Switch(temid, opciones, temelse, current.ChildNodes[0].Token.Location.Line, current.ChildNodes[0].Token.Location.Column);
+                }
+                else
+                {
+                    return new Switch(temid, opciones, null, current.ChildNodes[0].Token.Location.Line, current.ChildNodes[0].Token.Location.Column);
+                }
+
+            }
+            else if (equalnode(current, "L_OPC"))
+            {
+                LinkedList<Case> opciones = new LinkedList<Case>();
+                Case temcase;
+                foreach (ParseTreeNode hijo in current.ChildNodes)
+                {
+                    temcase = (Case)analisisnodo(hijo);
+                    opciones.AddLast(temcase);
+                }
+                return opciones;
+            }
+            else if (equalnode(current, "OPC"))
+            {
+                LinkedList<Expresion> etiq = (LinkedList<Expresion>)analisisnodo(current.ChildNodes[0]);
+                LinkedList<Instruccion> instruciones;
+                if (current.ChildNodes[2].Term.Name.Equals("INST", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    instruciones = new LinkedList<Instruccion>();
+                    Instruccion temp = (Instruccion)analisisnodo(current.ChildNodes[2]);
+                }
+                instruciones = (LinkedList<Instruccion>)analisisnodo(current.ChildNodes[2]);
+                return new Case(etiq, instruciones, current.ChildNodes[1].Token.Location.Line, current.ChildNodes[1].Token.Location.Column);
+
+            }
+            else if (equalnode(current, "L_EBC"))
+            {
+                LinkedList<Expresion> listaeti = new LinkedList<Expresion>();
+                Expresion temexp;
+                foreach (ParseTreeNode hijo in current.ChildNodes)
+                {
+                    temexp = (Expresion)analisisnodo(hijo);
+                    listaeti.AddLast(temexp);
+                }
+                return listaeti;
+            }
+            else if (equalnode(current, "EBC"))
+            {
+                if (current.ChildNodes.Count == 2)
+                {
+                    int temp = int.Parse(current.ChildNodes[1].Token.Text);
+                    temp = temp * -1;
+                    return new PrimitiveL(Utils.Types.INTEGER ,temp, current.ChildNodes[0].Token.Location.Line, current.ChildNodes[0].Token.Location.Column);
+                }
+                return analisisnodo(current.ChildNodes[0]);
+            }
+            else if (equalnode(current, "BKR"))
+            {
+                return new Break(current.ChildNodes[0].Token.Location.Line, current.ChildNodes[0].Token.Location.Column);
+            }
+            else if (equalnode(current, "COT"))
+            {
+                return new Continue(current.ChildNodes[0].Token.Location.Line, current.ChildNodes[0].Token.Location.Column);
+            }
+            else if (equalnode(current, "CONSTANTE"))
+            {
+                LinkedList<string> variables = new LinkedList<string>();
+                string name = obtenerid(current.ChildNodes[0]);
+                variables.AddLast(name);
+                Expresion valor = (Expresion)analisisnodo(current.ChildNodes[2]);
+                return new Declaracion(null,variables,valor, current.ChildNodes[1].Token.Location.Line, current.ChildNodes[1].Token.Location.Column,true);
+            }
+            else if (equalnode(current, "LISTA_CONSTANTE"))
+            {
+                LinkedList<Instruccion> constantes = new LinkedList<Instruccion>();
+                Declaracion auxconst;
+                foreach (ParseTreeNode hijo in current.ChildNodes)
+                {
+                    auxconst = (Declaracion)analisisnodo(hijo);
+                    constantes.AddLast(auxconst);
+                }
+                return constantes;
+            }
             else if (equalnode(current, "BEGIN"))
             {
                 return analisisnodo(current.ChildNodes[1]);
+            }
+            else if (equalnode(current, "EXT"))
+            {
+                return new Return(current.ChildNodes[0].Token.Location.Line, current.ChildNodes[0].Token.Location.Column, (Expresion)analisisnodo(current.ChildNodes[2]));
             }
             else if (equalnode(current, "L_EXP"))
             {

@@ -8,17 +8,24 @@ using System.Text;
 
 namespace compipascal2.Instrucciones.Control
 {
-    class While : Instruccion
+    class For : Instruccion
     {
         public int Linea { get;set; }
         public int Columna { get;set; }
-        private Expresion condicion;
-        private LinkedList<Instruccion> instruciones;
 
-        public While(Expresion condicion, LinkedList<Instruccion> instruciones, int linea, int columna)
+        private Instruccion inicio;
+        private Expresion condicion;
+        private Expresion condicionupdate;
+        private Instruccion update;
+        private LinkedList<Instruccion> instrucciones;
+
+        public For(Instruccion inicio,Expresion condicion,Instruccion update,Expresion condicionupdate, LinkedList<Instruccion> instrucciones, int linea, int columna)
         {
+            this.inicio = inicio;
             this.condicion = condicion;
-            this.instruciones = instruciones;
+            this.update = update;
+            this.condicionupdate = condicionupdate;
+            this.instrucciones = instrucciones;
             Linea = linea;
             Columna = columna;
         }
@@ -29,7 +36,8 @@ namespace compipascal2.Instrucciones.Control
             try
             {
                 string labelwhile = generator.newLabel();
-                generator.addComment("Inicia While");
+                this.inicio.generar(ent);
+                generator.addComment("Inicia For");
                 generator.addLabel(labelwhile);
                 Retorno condicion = this.condicion.resolver(ent);
                 if (condicion.type.type == Types.BOOLEAN)
@@ -37,18 +45,22 @@ namespace compipascal2.Instrucciones.Control
                     ent.break1.Push(condicion.Labelfalse);
                     ent.continue1.Push(labelwhile);
                     generator.addLabel(condicion.Labeltrue);
-                    foreach (Instruccion inst in instruciones)
+                    foreach (Instruccion inst in instrucciones)
                     {
                         inst.generar(ent);
                     }
+                    this.condicionupdate.labeltrue = condicion.Labelfalse;
+                    Retorno auxret = this.condicionupdate.resolver(ent);
+                    generator.addLabel(auxret.Labelfalse);
+                    this.update.generar(ent);
                     generator.addGoto(labelwhile);
                     generator.addLabel(condicion.Labelfalse);
-                    generator.addComment("Finaliza While");
+                    generator.addComment("Finaliza For");
                     ent.break1.Pop();
                     ent.continue1.Pop();
                     return null;
                 }
-                throw new Errorp(Linea, Columna, "Semantico", "La condicion del While no es de tipo booleana sino de ->" + condicion.type.type, ent.nombre);
+                throw new Errorp(Linea, Columna, "Semantico", "La condicion del For no es de tipo booleana sino de ->" + condicion.type.type, ent.nombre);
             }
             catch(Exception ex)
             {

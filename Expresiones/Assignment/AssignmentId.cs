@@ -15,7 +15,7 @@ namespace compipascal2.Expresiones.Assignment
         public int Linea { get; set; }
         public int Columna { get; set; }
 
-        private string id;
+        public string id { get; set; }
         private Expresion anterior;
 
         public AssignmentId(string id, Expresion anterior, int linea, int columna)

@@ -1,5 +1,7 @@
 ﻿using compipascal2.Abstract;
+using compipascal2.Expresiones.Assignment;
 using compipascal2.Generador;
+using compipascal2.Instrucciones.Tranferencia;
 using compipascal2.SymbolTable;
 using compipascal2.Utils;
 using System;
@@ -14,9 +16,9 @@ namespace compipascal2.Instrucciones.Variables
         public int Columna { get;set; }
 
         private Expresion valor;
-        private Expresion target;
+        private AssignmentId target;
 
-        public Asignacion(Expresion target, Expresion valor, int linea, int columna)
+        public Asignacion(AssignmentId target, Expresion valor, int linea, int columna)
         {
             this.target = target;
             this.valor = valor;
@@ -26,55 +28,72 @@ namespace compipascal2.Instrucciones.Variables
 
         public object generar(Entorno ent)
         {
-            Retorno target = this.target.resolver(ent);
-            Retorno valor = this.valor.resolver(ent);
-            Generator generator = Generator.getInstance();
-            Simbolo symbol = target.symbol;
-            if (!this.sameType(target.type, valor.type))
+            
+            try
             {
-                throw new Errorp(Linea, Columna, "Semantico", "No es posible asignar el tipo " + valor.type.type + " al tipo " + target.type.type, ent.nombre);
-            }
-            /*if(target.type != valor.type)
-            {
-                throw new Errorp(Linea, Columna, "Semantico", "No es posible asignar el tipo "+valor.type.type +" al tipo "+target.type.type, ent.nombre);
-            }*/
-            // para los array
-
-            if(symbol == null || symbol.isHeap)
-            {
-                if(target.type.type == Types.BOOLEAN)
+                if (this.target.id.Equals(ent.nombre, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    string templabel = generator.newLabel();
-                    generator.addLabel(valor.Labeltrue);
-                    generator.addSetHeap(target.getValor(), "1");
-                    generator.addGoto(templabel);
-                    generator.addLabel(valor.Labelfalse);
-                    generator.addSetHeap(target.getValor(), "0");
-                    generator.addLabel(templabel);
+                    Return aux = new Return(Linea, Columna, this.valor);
+                    aux.generar(ent);
+                    return null;
+                }
+                Retorno target = this.target.resolver(ent);
+
+                Retorno valor = this.valor.resolver(ent);
+                Generator generator = Generator.getInstance();
+                Simbolo symbol = target.symbol;
+                if (!this.sameType(target.type, valor.type))
+                {
+                    throw new Errorp(Linea, Columna, "Semantico", "No es posible asignar el tipo " + valor.type.type + " al tipo " + target.type.type, ent.nombre);
+                }
+
+                // para los array
+
+                if (symbol.isConst)
+                {
+                    throw new Errorp(Linea, Columna, "Semantico", " No es posible una asignacion lla que " +target.symbol.id + " es una Constante", ent.nombre);
+                }
+
+                if (symbol == null || symbol.isHeap)
+                {
+                    if (target.type.type == Types.BOOLEAN)
+                    {
+                        string templabel = generator.newLabel();
+                        generator.addLabel(valor.Labeltrue);
+                        generator.addSetHeap(target.getValor(), "1");
+                        generator.addGoto(templabel);
+                        generator.addLabel(valor.Labelfalse);
+                        generator.addSetHeap(target.getValor(), "0");
+                        generator.addLabel(templabel);
+                    }
+                    else
+                    {
+                        generator.addSetHeap(target.getValor(), valor.getValor());
+                    }
                 }
                 else
                 {
-                    generator.addSetHeap(target.getValor(),valor.getValor());
+                    if (target.type.type == Types.BOOLEAN)
+                    {
+                        string templabel = generator.newLabel();
+                        generator.addLabel(valor.Labeltrue);
+                        generator.addSetStack(target.getValor(), "1");
+                        generator.addGoto(templabel);
+                        generator.addLabel(valor.Labelfalse);
+                        generator.addSetStack(target.getValor(), "0");
+                        generator.addLabel(templabel);
+                    }
+                    else
+                    {
+                        generator.addSetStack(target.getValor(), valor.getValor());
+                    }
                 }
             }
-            else
+            catch(Exception ex)
             {
-                if(target.type.type == Types.BOOLEAN)
-                {
-                    string templabel = generator.newLabel();
-                    generator.addLabel(valor.Labeltrue);
-                    generator.addSetStack(target.getValor(),"1");
-                    generator.addGoto(templabel);
-                    generator.addLabel(valor.Labelfalse);
-                    generator.addSetStack(target.getValor(), "0");
-                    generator.addLabel(templabel);
-                }
-                else
-                {
-                    generator.addSetStack(target.getValor(),valor.getValor());
-                }
+                Form1.salida.AppendText(ex.ToString());
             }
-
+            
             return null;
         }
 

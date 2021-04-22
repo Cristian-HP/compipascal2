@@ -1,4 +1,5 @@
-﻿using System;
+﻿using compipascal2.SymbolTable;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,7 +13,7 @@ namespace compipascal2.Generador
         private int label;
         private LinkedList<string> code;
         private HashSet<string> tempStorage;
-        string isFunc = "";
+        public string isFunc = "";
         private Generator()
         {
             this.temporal = 5;
@@ -105,11 +106,11 @@ namespace compipascal2.Generador
         }
         public void addSetStack(object index,object valor)
         {
-            this.code.AddLast(this.isFunc+"Stack["+index.ToString()+"] = " + valor.ToString()+";");
+            this.code.AddLast(this.isFunc+"Stack[(int)"+index.ToString()+"] = " + valor.ToString()+";");
         }
         public void addGetStack(object target,object index)
         {
-            this.code.AddLast(this.isFunc + target + " = Stack[" + index + "];");
+            this.code.AddLast(this.isFunc + target + " = Stack[(int)" + index + "];");
         }
         public void addNextEnv(int size)
         {
@@ -166,6 +167,63 @@ namespace compipascal2.Generador
         public void addComment(string comment)
         {
             this.code.AddLast("/*** "+comment+"  **/");
+        }
+        public void addBegin(string uniid)
+        {
+            this.code.AddLast("\nvoid "+uniid+ "(){");
+        }
+        public void addEnd()
+        {
+            this.code.AddLast("\treturn;\n}\n");
+        }
+        public void NewCode()
+        {
+            this.code = new LinkedList<string>();
+        }
+        public int saveTemps(Entorno ent)
+        {
+            if(this.tempStorage.Count > 0)
+            {
+                string temp = this.newTemporal();
+                this.freeTemp(temp);
+                int size = 0;
+                this.addComment("Inicia Guardado de temporales");
+                this.addExpresion(temp, "SP", ent.size, "+");
+                foreach(string value in this.tempStorage)
+                {
+                    size++;
+                    this.addSetStack(temp, value);
+                    if (size != this.tempStorage.Count) this.addExpresion(temp,temp,"1","+");
+                }
+                this.addComment("Finaliza guardado de temporales");
+            }
+            int ptr = ent.size;
+            ent.size = ptr + this.tempStorage.Count;
+            return ptr;
+        }
+        public void recoverTemps(Entorno ent,int pos)
+        {
+            if(this.tempStorage.Count > 0)
+            {
+                string temp = this.newTemporal();
+                this.freeTemp(temp);
+                int size = 0;
+                this.addComment("Inicia Recuparado de Temporales");
+                this.addExpresion(temp, "SP", pos, "+");
+                foreach(string value in this.tempStorage)
+                {
+                    size++;
+                    this.addGetStack(value, temp);
+                    if (size != this.tempStorage.Count) this.addExpresion(temp,temp,"1","+");
+                }
+                this.addComment("Finaliza Recuparacion de temporales");
+                ent.size = pos;
+            }
+        }
+        public void addTEmp(string temp)
+        {
+            if (!(this.tempStorage.Contains(temp)))
+                this.tempStorage.Add(temp);
         }
         public string nativas()
         {
