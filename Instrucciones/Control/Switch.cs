@@ -26,7 +26,7 @@ namespace compipascal2.Instrucciones.Control
             Columna = columna;
         }
 
-        public object generar(Entorno ent)
+        public object generar(Entorno ent, LinkedList<Errorp> errorps)
         {
             Generator generator = Generator.getInstance();
             try
@@ -38,17 +38,18 @@ namespace compipascal2.Instrucciones.Control
                 foreach (Case opcion in lista_case)
                 {
                     opcion.initcondicion = condi;
-                    opcion.generar(ent);
+                    opcion.generar(ent,errorps);
                 }
                 if (defaultcase != null)
                 {
-                    this.defaultcase.generar(ent);
+                    this.defaultcase.generar(ent,errorps);
                 }
                 generator.addLabel(condi.Labeltrue);
                 generator.addComment(" Finaliza Case ");
             }
             catch(Exception ex)
             {
+                errorps.AddLast((Errorp)ex);
                 Form1.salida.AppendText(ex.ToString());
             }
             

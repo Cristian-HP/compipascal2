@@ -29,7 +29,7 @@ namespace compipascal2.Instrucciones.Funciones
             Columna = columna;
         }
 
-        public object generar(Entorno ent)
+        public object generar(Entorno ent, LinkedList<Errorp> errorps)
         {
             try
             {
@@ -39,7 +39,7 @@ namespace compipascal2.Instrucciones.Funciones
                     this.validateParams(ent);
                     this.validteType(ent);
                     string uniqueid = this.uniqueId(ent);
-                    if (!ent.addFunc(this, uniqueid))
+                    if (!ent.addFunc(this, uniqueid,Linea,Columna))
                         throw new Errorp(Linea, Columna, "Semantico", "Ya Existe una funcion con el id: " + this.id, ent.nombre);
                     return null;
                 }
@@ -53,14 +53,14 @@ namespace compipascal2.Instrucciones.Funciones
                     nuevo.setEntornoFuncion(this.id, symbolfunc, returnlabel);
                     foreach (Param parmet in this.parametros)
                     {
-                        nuevo.declararvariable(parmet.id, parmet.type, false, false);
+                        nuevo.declararvariable(parmet.id, parmet.type, false, false,this.Linea,this.Columna);
                     }
                     generator.clearTempStorage();
                     generator.isFunc = "\t";
                     generator.addBegin(symbolfunc.uniqueId);
                     foreach (Instruccion inst in this.instrucciones)
                     {
-                        inst.generar(nuevo);
+                        inst.generar(nuevo,errorps);
                     }
                     generator.addLabel(returnlabel);
                     generator.addEnd();
@@ -70,6 +70,7 @@ namespace compipascal2.Instrucciones.Funciones
             }
             catch(Exception ex)
             {
+                errorps.AddLast((Errorp)ex);
                 Form1.salida.AppendText(ex.ToString());
             }
             

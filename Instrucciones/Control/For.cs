@@ -30,13 +30,13 @@ namespace compipascal2.Instrucciones.Control
             Columna = columna;
         }
 
-        public object generar(Entorno ent)
+        public object generar(Entorno ent, LinkedList<Errorp> errorps)
         {
             Generator generator = Generator.getInstance();
             try
             {
                 string labelwhile = generator.newLabel();
-                this.inicio.generar(ent);
+                this.inicio.generar(ent,errorps);
                 generator.addComment("Inicia For");
                 generator.addLabel(labelwhile);
                 Retorno condicion = this.condicion.resolver(ent);
@@ -47,12 +47,12 @@ namespace compipascal2.Instrucciones.Control
                     generator.addLabel(condicion.Labeltrue);
                     foreach (Instruccion inst in instrucciones)
                     {
-                        inst.generar(ent);
+                        inst.generar(ent,errorps);
                     }
                     this.condicionupdate.labeltrue = condicion.Labelfalse;
                     Retorno auxret = this.condicionupdate.resolver(ent);
                     generator.addLabel(auxret.Labelfalse);
-                    this.update.generar(ent);
+                    this.update.generar(ent,errorps);
                     generator.addGoto(labelwhile);
                     generator.addLabel(condicion.Labelfalse);
                     generator.addComment("Finaliza For");
@@ -64,6 +64,7 @@ namespace compipascal2.Instrucciones.Control
             }
             catch(Exception ex)
             {
+                errorps.AddLast((Errorp)ex);
                 Form1.salida.AppendText(ex.ToString());
                 return null;
             }

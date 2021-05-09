@@ -26,7 +26,7 @@ namespace compipascal2.Expresiones.Assignment
             Columna = columna;
         }
 
-        public object generar(Entorno ent)
+        public object generar(Entorno ent,LinkedList<Errorp> errorps)
         {
             try
             {
@@ -34,6 +34,7 @@ namespace compipascal2.Expresiones.Assignment
                 value.getValor();
             }catch(Exception ex)
             {
+                errorps.AddLast((Errorp)ex);
                 Form1.salida.AppendText(ex.ToString());
             }
             

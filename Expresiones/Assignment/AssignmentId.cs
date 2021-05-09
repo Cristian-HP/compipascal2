@@ -49,8 +49,30 @@ namespace compipascal2.Expresiones.Assignment
             }
             else
             {
-                //para los struct
-                return null;
+                Retorno anterior = this.anterior.resolver(ent);
+                SimboloStruct symstruct = ent.getStruct(anterior.type.idtype.ToLower()); ;
+                if (anterior.type.type != Types.OBJECT)
+                    throw new Errorp(Linea,Columna,"Semantico","Acceso no valido para el tipo "+anterior.type.type,ent.nombre);
+                //SimboloStruct symstruct = ent.getStruct(anterior.type.idtype);
+                if (symstruct == null)
+                    throw new Errorp(Linea,Columna,"Semantico","No existe el Struct "+anterior.type.idtype,ent.nombre);
+                var atribute = symstruct.getAttribute(this.id);
+                if (atribute.valor == null)
+                    throw new Errorp(Linea,Columna,"Semantico","El Struct "+symstruct.id+" no tiene el atributo "+this.id,ent.nombre);
+
+                string tempaux = generator.newTemporal();
+                generator.freeTemp(tempaux);
+                string temp = generator.newTemporal();
+                if(anterior.symbol != null && !(anterior.symbol.isHeap))
+                {
+                    generator.addGetStack(tempaux, anterior.getValor());
+                }
+                else
+                {
+                    generator.addGetHeap(tempaux,anterior.getValor());
+                }
+                generator.addExpresion(temp,tempaux,atribute.index,"+");
+                return new Retorno(temp,true,atribute.valor.type,new Simbolo(atribute.valor.type,this.id,atribute.index,false,false,true));
             }
         }
     }

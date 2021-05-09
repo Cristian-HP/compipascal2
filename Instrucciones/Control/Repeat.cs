@@ -23,7 +23,7 @@ namespace compipascal2.Instrucciones.Control
             Columna = columna;
         }
 
-        public object generar(Entorno ent)
+        public object generar(Entorno ent, LinkedList<Errorp> errorps)
         {
             Generator generator = Generator.getInstance();
             try
@@ -36,7 +36,7 @@ namespace compipascal2.Instrucciones.Control
                 generator.addLabel(this.condicion.labelfalse);
                 foreach (Instruccion inst in instrucciones)
                 {
-                    inst.generar(ent);
+                    inst.generar(ent,errorps);
                 }
                 Retorno condicion = this.condicion.resolver(ent);
                 if (condicion.type.type == Types.BOOLEAN)
@@ -51,6 +51,7 @@ namespace compipascal2.Instrucciones.Control
             }
             catch(Exception ex)
             {
+                errorps.AddLast((Errorp)ex);
                 Form1.salida.AppendText(ex.ToString());
                 return null;
             }

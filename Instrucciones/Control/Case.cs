@@ -24,7 +24,7 @@ namespace compipascal2.Instrucciones.Control
             Columna = columna;
         }
 
-        public object generar(Entorno ent)
+        public object generar(Entorno ent,LinkedList<Errorp> errorps)
         {
             Generator generator = Generator.getInstance();
             foreach (Expresion exp in condiciones)
@@ -38,7 +38,7 @@ namespace compipascal2.Instrucciones.Control
                 generator.addIF(initcondicion.getValor(), auxret.getValor(), "!=", auxlabel);
                 foreach (Instruccion inst in instrucciones)
                 {
-                    inst.generar(ent);
+                    inst.generar(ent,errorps);
                 }
                 generator.addGoto(initcondicion.Labeltrue);
                 generator.addLabel(auxlabel);

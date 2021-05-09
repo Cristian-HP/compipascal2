@@ -26,7 +26,7 @@ namespace compipascal2.Instrucciones.Variables
             Columna = columna;
         }
 
-        public object generar(Entorno ent)
+        public object generar(Entorno ent, LinkedList<Errorp> errorps)
         {
             
             try
@@ -34,7 +34,7 @@ namespace compipascal2.Instrucciones.Variables
                 if (this.target.id.Equals(ent.nombre, StringComparison.InvariantCultureIgnoreCase))
                 {
                     Return aux = new Return(Linea, Columna, this.valor);
-                    aux.generar(ent);
+                    aux.generar(ent,errorps);
                     return null;
                 }
                 Retorno target = this.target.resolver(ent);
@@ -53,8 +53,7 @@ namespace compipascal2.Instrucciones.Variables
                 {
                     throw new Errorp(Linea, Columna, "Semantico", " No es posible una asignacion lla que " +target.symbol.id + " es una Constante", ent.nombre);
                 }
-
-                if (symbol == null || symbol.isHeap)
+                if(symbol == null || symbol.isHeap)
                 {
                     if (target.type.type == Types.BOOLEAN)
                     {
@@ -91,6 +90,7 @@ namespace compipascal2.Instrucciones.Variables
             }
             catch(Exception ex)
             {
+                errorps.AddLast((Errorp)ex);
                 Form1.salida.AppendText(ex.ToString());
             }
             

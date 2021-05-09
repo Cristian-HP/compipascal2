@@ -1,4 +1,5 @@
 ﻿using compipascal2.Instrucciones.Funciones;
+using compipascal2.Utils;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -9,6 +10,7 @@ namespace compipascal2.SymbolTable
     {
         Dictionary<string, Simbolo> variables;
         Dictionary<string, SimboloFuncion> funciones;
+        Dictionary<string, SimboloStruct> Structs;
         Entorno? padre;
         public string nombre { get; set; }
         public int size { get; set; }
@@ -23,6 +25,7 @@ namespace compipascal2.SymbolTable
             this.nombre = nombre;
             this.variables = new Dictionary<string, Simbolo>();
             this.funciones = new Dictionary<string, SimboloFuncion>();
+            this.Structs = new Dictionary<string, SimboloStruct>();
             this.size = padre !=null ? padre.size : 0;
             this.break1 = padre != null ? padre.break1 : new Stack<string>();
             this.return1 = padre != null ? padre.return1 : null;
@@ -32,12 +35,17 @@ namespace compipascal2.SymbolTable
 
         }
 
-        public Simbolo declararvariable(string id,Utils.Type type, bool isconst,bool isRef)
+        public Simbolo declararvariable(string id,Utils.Type type, bool isconst,bool isRef,int linea,int columna)
         {
             id = id.ToLower();
             if (this.variables.ContainsKey(id)) return null;
             Simbolo newVar = new Simbolo(type, id, this.size++,isconst,this.padre==null,isRef);
             this.variables.Add(id, newVar);
+            string ambiente = "Variable";
+            if (isconst)
+                ambiente = "Costante";
+
+            Form1.Tablasim.AddLast(new TablaReport(id,linea,columna,nombre,type.type.ToString(),ambiente,0));
             return newVar;
         }
 
@@ -62,10 +70,11 @@ namespace compipascal2.SymbolTable
             this.actualFunc = actualfun;
         }
 
-        public bool addFunc(Funcion func,string uniqueId)
+        public bool addFunc(Funcion func,string uniqueId,int linea,int columna)
         {
             if (this.funciones.ContainsKey(func.id.ToLower())) return false;
             this.funciones.Add(func.id.ToLower(), new SimboloFuncion(func, uniqueId));
+            Form1.Tablasim.AddLast(new TablaReport(func.id,linea,columna,nombre,func.tipo.type.ToString(),"Funcion/Procedimiento",func.parametros.Count));
             return true;
         }
         public SimboloFuncion getFunc(string id)
@@ -84,6 +93,34 @@ namespace compipascal2.SymbolTable
                 actual = actual.padre;
             }
             return null;
+        }
+
+        public bool addStruct(string id,int size,LinkedList<Param> atributos)
+        {
+            if (this.Structs.ContainsKey(id.ToLower()))
+                return false;
+            this.Structs.Add(id.ToLower(), new SimboloStruct(id.ToLower(), size, atributos));
+            return true;
+        }
+
+        public SimboloStruct getStruct(string id)
+        {
+            Entorno aux = getGlobal();
+            if (aux.Structs.ContainsKey(id.ToLower()))
+            {
+                return aux.Structs[id.ToLower()];
+            }
+            return null;
+        }
+
+        public Entorno getGlobal()
+        {
+            Entorno temp = this;
+            while(temp.padre != null)
+            {
+                temp = temp.padre;
+            }
+            return temp;
         }
 
     }

@@ -24,7 +24,7 @@ namespace compipascal2.Instrucciones
             Columna = columna;
         }
 
-        public object generar(Entorno ent)
+        public object generar(Entorno ent, LinkedList<Errorp> errorps)
         {
             Generator generator = Generator.getInstance();
             foreach (Expresion expre in expresion)
@@ -58,6 +58,7 @@ namespace compipascal2.Instrucciones
                     }
                 }catch(Exception ex)
                 {
+                    errorps.AddLast((Errorp)ex);
                     Form1.salida.AppendText(ex.ToString());
                     Console.WriteLine(ex.ToString());
                     return null;

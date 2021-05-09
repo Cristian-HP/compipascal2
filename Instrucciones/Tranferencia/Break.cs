@@ -19,7 +19,7 @@ namespace compipascal2.Instrucciones.Tranferencia
             Columna = columna;
         }
 
-        public object generar(Entorno ent)
+        public object generar(Entorno ent, LinkedList<Errorp> errorps)
         {
             if(ent.break1.Count == 0)
             {

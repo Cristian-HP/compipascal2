@@ -1,5 +1,6 @@
 ﻿using compipascal2.Abstract;
 using compipascal2.SymbolTable;
+using compipascal2.Utils;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -19,11 +20,11 @@ namespace compipascal2.Instrucciones.Control
             Columna = columna;
         }
 
-        public object generar(Entorno ent)
+        public object generar(Entorno ent, LinkedList<Errorp> errorps)
         {
             foreach(Instruccion inst in instrucciones)
             {
-                inst.generar(ent);
+                inst.generar(ent,errorps);
             }
             return null;
         }

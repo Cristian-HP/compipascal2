@@ -25,7 +25,7 @@ namespace compipascal2.Instrucciones.Control
             Columna = columna;
         }
 
-        public object generar(Entorno ent)
+        public object generar(Entorno ent, LinkedList<Errorp> errorps)
         {
             Generator generator = Generator.getInstance();
             try
@@ -37,14 +37,14 @@ namespace compipascal2.Instrucciones.Control
                     generator.addLabel(condicion.Labeltrue);
                     foreach (Instruccion ints in instrucciones)
                     {
-                        ints.generar(ent);
+                        ints.generar(ent,errorps);
                     }
                     if (this._else != null)
                     {
                         string temlabel = generator.newLabel();
                         generator.addGoto(temlabel);
                         generator.addLabel(condicion.Labelfalse);
-                        this._else.generar(ent);
+                        this._else.generar(ent,errorps);
                         generator.addLabel(temlabel);
                     }
                     else
@@ -57,6 +57,7 @@ namespace compipascal2.Instrucciones.Control
             }
             catch(Exception ex)
             {
+                errorps.AddLast((Errorp)ex);
                 Form1.salida.AppendText(ex.ToString());
                 return null;
             }

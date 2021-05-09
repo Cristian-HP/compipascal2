@@ -138,6 +138,12 @@ namespace compipascal2.Analisis
             NonTerminal OPC = new NonTerminal("OPC");
             NonTerminal EBC = new NonTerminal("EBC");
             NonTerminal L_EBC = new NonTerminal("L_EBC");
+            NonTerminal L_ELEMENTOS = new NonTerminal("L_ELEM");
+            NonTerminal ELEMENTO = new NonTerminal("ELEM");
+            NonTerminal L_VARELEM = new NonTerminal("L_VARELE");
+            NonTerminal VARELE = new NonTerminal("VARELM");
+            NonTerminal ASIGMENT = new NonTerminal("ASIGMENT");
+            NonTerminal AccessID = new NonTerminal("ACCESSID");
             #endregion
 
             #region GRAMATICA
@@ -174,7 +180,9 @@ namespace compipascal2.Analisis
 
             CONSTANTE.Rule = id + igual + ELOG + ptocoma;
 
-            TYPES.Rule = id + igual + TIPONOPRI + ptocoma;
+            TYPES.Rule = id + igual + OBJ + ptocoma
+                       | id + igual + ARR + ptocoma
+                       ;
 
             VARIABLE.Rule = LISTA_ID + dospto + TIPOID + igual + ELOG + ptocoma
                            | LISTA_ID + dospto + TIPOID + ptocoma
@@ -185,16 +193,27 @@ namespace compipascal2.Analisis
             TIPONOPRI.Rule = OBJ
                             | ARR
                             ;
+            L_VARELEM.Rule = MakePlusRule(L_VARELEM,VARELE);
 
-            OBJ.Rule = robject + DECLARACIONES + rend;
+            VARELE.Rule = rvar + L_ELEMENTOS;
+
+            OBJ.Rule = robject + L_VARELEM + rend;
+
+            L_ELEMENTOS.Rule = MakePlusRule(L_ELEMENTOS,ELEMENTO);
+
+            ELEMENTO.Rule = LISTA_ID + dospto + TIPOID + ptocoma;
 
             ARR.Rule = rarray + corabre + IT + corcierra + rof + TIPOID;
 
             L_DEF.Rule = MakePlusRule(L_DEF, DEF);
 
-            ASIGN.Rule = id + asig + ELOG + ptocoma
-                        | id + asig + ELOG
+            ASIGN.Rule = ASIGMENT + asig + ELOG + ptocoma
+                        | ASIGMENT + asig + ELOG
                         ;
+            ASIGMENT.Rule = ASIGMENT + punto + id
+                          | ASIGMENT + corabre + EARI + corcierra
+                          | id
+                          ;
 
             TIPOPRI.Rule = rinteger
                           | rstring
@@ -271,9 +290,14 @@ namespace compipascal2.Analisis
                       | menos + EARI
                       | number
                       | cadena
-                      | id
+                      | AccessID
                       | LLAMA
                       ;
+
+            AccessID.Rule = AccessID + punto + id
+                          | AccessID + corabre + EARI + corcierra
+                          | id
+                          ;
 
             INST.Rule = ASIGN
                       | IF
@@ -349,6 +373,8 @@ namespace compipascal2.Analisis
 
             EXT.Rule = rexit + parabre + ELOG + parcierra + ptocoma
                      | rexit + parabre + ELOG + parcierra
+                     | rexit + parabre + parcierra +ptocoma
+                     | rexit + parabre + parcierra
                      ;
 
             GTS.Rule = rgraficar + parabre + parcierra + ptocoma

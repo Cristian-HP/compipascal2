@@ -70,7 +70,31 @@ namespace compipascal2.Expresiones.Access
             }
             else
             {
-                return null;
+                Retorno anterior = this.anterior.resolver(ent);
+                SimboloStruct symstruct = ent.getStruct(anterior.type.idtype);
+                if (anterior.type.type != Types.OBJECT || symstruct == null)
+                    throw new Errorp(Linea,Columna,"Semantico","Acceso NO valido para el tipo "+anterior.type.type,ent.nombre);
+                var atribute = symstruct.getAttribute(this.id);
+
+                if (atribute.valor == null)
+                    throw new Errorp(Linea,Columna,"Semantico","El struct "+symstruct.id+" no tiene el atributo "+this.id,ent.nombre);
+                string tempaux = generator.newTemporal();
+                generator.freeTemp(tempaux);
+                string temp = generator.newTemporal();
+
+                generator.addExpresion(tempaux,anterior.getValor(),atribute.index,"+");
+                generator.addGetHeap(temp, tempaux);
+
+                if(atribute.valor.type.type != Types.BOOLEAN) return new Retorno(temp, true, atribute.valor.type);
+                Retorno retorno = new Retorno("", false, atribute.valor.type);
+                this.labeltrue = this.labeltrue == "" || this.labeltrue == null ? generator.newLabel() : this.labeltrue;
+                this.labelfalse = this.labelfalse == "" || this.labelfalse == null ? generator.newLabel() : this.labelfalse;
+                generator.addIF(temp, "1", "==", this.labeltrue);
+                generator.addGoto(this.labelfalse);
+                retorno.Labeltrue = this.labeltrue;
+                retorno.Labelfalse = this.labelfalse;
+                return retorno;
+
             }
         }
 

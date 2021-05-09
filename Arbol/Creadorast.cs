@@ -101,6 +101,10 @@ namespace compipascal2.Arbol
             {
                 return new Group((LinkedList<Instruccion>)analisisnodo(current.ChildNodes[1]));
             }
+            else if (equalnode(current, "TYPES_GLO"))
+            {
+                return new Group((LinkedList<Instruccion>)analisisnodo(current.ChildNodes[1]));
+            }
             else if (equalnode(current, "LISTA_VARIABLE"))
             {
                 LinkedList<Instruccion> lisdecla = new LinkedList<Instruccion>();
@@ -276,7 +280,12 @@ namespace compipascal2.Arbol
                 {
                     variables = (LinkedList<string>)analisisnodo(current.ChildNodes[0]);
                     tipo = (Utils.Type)analisisnodo(current.ChildNodes[2]);
-                    return new Declaracion(tipo,variables,null, current.ChildNodes[1].Token.Location.Line, current.ChildNodes[1].Token.Location.Column);
+                    Expresion value = null;
+                    if(tipo.type == Types.OBJECT)
+                    {
+                        value = new NewStruct(tipo.idtype, current.ChildNodes[1].Token.Location.Line, current.ChildNodes[1].Token.Location.Column);
+                    }
+                    return new Declaracion(tipo,variables,value, current.ChildNodes[1].Token.Location.Line, current.ChildNodes[1].Token.Location.Column);
                 }
                 else if (current.ChildNodes.Count == 6)
                 {
@@ -317,8 +326,23 @@ namespace compipascal2.Arbol
             else if (equalnode(current, "ASIGN"))
             {
                 Expresion valor = (Expresion)analisisnodo(current.ChildNodes[2]);
-                AssignmentId tar = new AssignmentId(obtenerid(current.ChildNodes[0]).ToLower(),null, current.ChildNodes[0].Token.Location.Line, current.ChildNodes[0].Token.Location.Column);
-                return new Asignacion(tar,valor, current.ChildNodes[0].Token.Location.Line, current.ChildNodes[0].Token.Location.Column);
+                AssignmentId tar = (AssignmentId)analisisnodo(current.ChildNodes[0]);
+                return new Asignacion(tar,valor, current.ChildNodes[1].Token.Location.Line, current.ChildNodes[1].Token.Location.Column);
+            }
+            else if(equalnode(current, "ASIGMENT"))
+            {
+                if(current.ChildNodes.Count == 1)
+                {
+                    return new AssignmentId(obtenerid(current.ChildNodes[0]).ToLower(),null, current.ChildNodes[0].Token.Location.Line, current.ChildNodes[0].Token.Location.Column);
+                }else if(current.ChildNodes.Count == 3)
+                {
+                    AssignmentId temp = (AssignmentId)analisisnodo(current.ChildNodes[0]);
+                    return new AssignmentId(obtenerid(current.ChildNodes[2]).ToLower(),temp,current.ChildNodes[2].Token.Location.Line, current.ChildNodes[2].Token.Location.Column);
+                }
+                else
+                {
+                    // esto para el array
+                }
             }
             else if (equalnode(current, "MAIN"))
             {
@@ -549,7 +573,92 @@ namespace compipascal2.Arbol
             }
             else if (equalnode(current, "EXT"))
             {
-                return new Return(current.ChildNodes[0].Token.Location.Line, current.ChildNodes[0].Token.Location.Column, (Expresion)analisisnodo(current.ChildNodes[2]));
+                if(current.ChildNodes.Count == 5)
+                {
+                    return new Return(current.ChildNodes[0].Token.Location.Line, current.ChildNodes[0].Token.Location.Column, (Expresion)analisisnodo(current.ChildNodes[2]));
+                }else if(current.ChildNodes.Count == 4)
+                {
+                    if(current.ChildNodes[2].Token.Text == ")")
+                    {
+                        return new Return(current.ChildNodes[0].Token.Location.Line, current.ChildNodes[0].Token.Location.Column, null);
+                    }
+                    else
+                    {
+                        return new Return(current.ChildNodes[0].Token.Location.Line, current.ChildNodes[0].Token.Location.Column, (Expresion)analisisnodo(current.ChildNodes[2]));
+                    }
+                }
+                else
+                {
+                    return new Return(current.ChildNodes[0].Token.Location.Line, current.ChildNodes[0].Token.Location.Column,null);
+                }
+                
+            }
+            else if (equalnode(current, "LISTA_TYPES"))
+            {
+                LinkedList<Instruccion> lisdecla = new LinkedList<Instruccion>();
+                foreach (ParseTreeNode hijo in current.ChildNodes)
+                {
+                    lisdecla.AddLast((Instruccion)analisisnodo(hijo));
+                }
+                return lisdecla;
+            }
+            else if (equalnode(current, "TYPES"))
+            {
+                string id = current.ChildNodes[0].Token.Text.ToString().ToLower();
+                if (current.ChildNodes[2].Term.Name.Equals("OBJETO"))
+                {
+                    LinkedList<Param> lista_elements = (LinkedList<Param>)analisisnodo(current.ChildNodes[2]);
+                    return new StructFst(id,lista_elements,current.ChildNodes[0].Token.Location.Line,current.ChildNodes[0].Token.Location.Column);
+                }
+                else
+                {
+                    //array
+                }
+            }
+            else if (equalnode(current, "OBJETO"))
+            {
+                return analisisnodo(current.ChildNodes[1]);
+            }
+            else if(equalnode(current, "L_ELEM"))
+            {
+                LinkedList<Param> lista_element = new LinkedList<Param>();
+                foreach(ParseTreeNode hijo in current.ChildNodes)
+                {
+                    LinkedList<Param> elements = (LinkedList<Param>)analisisnodo(hijo);
+                    foreach(Param element in elements)
+                    {
+                        lista_element.AddLast(element);
+                    }
+                }
+                return lista_element;
+            }
+            else if (equalnode(current, "ELEM"))
+            {
+                LinkedList<string> listid = (LinkedList<string>)analisisnodo(current.ChildNodes[0]);
+                Utils.Type tipo = (Utils.Type)analisisnodo(current.ChildNodes[2]);
+                LinkedList<Param> elemntos = new LinkedList<Param>();
+                foreach(string aux in listid)
+                {
+                    elemntos.AddLast(new Param(aux,tipo));
+                }
+                return elemntos;
+            }
+            else if (equalnode(current, "L_VARELE"))
+            {
+                LinkedList<Param> lista_tot = new LinkedList<Param>();
+                foreach(ParseTreeNode hijo in current.ChildNodes)
+                {
+                    LinkedList<Param> aux = (LinkedList<Param>)analisisnodo(hijo);
+                    foreach(Param temp in aux)
+                    {
+                        lista_tot.AddLast(temp);
+                    }
+                }
+                return lista_tot;
+            }
+            else if (equalnode(current, "VARELM"))
+            {
+                return analisisnodo(current.ChildNodes[1]);
             }
             else if (equalnode(current, "L_EXP"))
             {
@@ -640,6 +749,21 @@ namespace compipascal2.Arbol
                     return analisisnodo(current.ChildNodes[0]);
                 }
             }
+            else if (equalnode(current, "ACCESSID"))
+            {
+                if(current.ChildNodes.Count == 1)
+                {
+                    return new AccessId(obtenerid(current.ChildNodes[0]).ToLower(), null, current.ChildNodes[0].Token.Location.Line, current.ChildNodes[0].Token.Location.Column);
+                }else if(current.ChildNodes.Count == 3)
+                {
+                    Expresion temp = (Expresion)analisisnodo(current.ChildNodes[0]);
+                    return new AccessId(obtenerid(current.ChildNodes[2]).ToLower(),temp,current.ChildNodes[1].Token.Location.Line, current.ChildNodes[1].Token.Location.Column);
+                }
+                else
+                {
+                    //array
+                }
+            }
             else if (equaliteral(current))
             {
                 return obtenerliteral(current);
@@ -648,7 +772,7 @@ namespace compipascal2.Arbol
             }
             else if (equalid(current))
             {
-                return new AccessId(obtenerid(current).ToLower(),null, current.Token.Location.Line, current.Token.Location.Column);
+                return new AccessId(obtenerid(current).ToLower(), null, current.Token.Location.Line, current.Token.Location.Column);
             }
             return null;
         }

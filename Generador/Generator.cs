@@ -91,7 +91,12 @@ namespace compipascal2.Generador
         }
         public void addSetHeap(object index,object valor)
         {
-            this.code.AddLast(this.isFunc + "Heap[" + index.ToString() + "] = " + valor+";");
+            this.code.AddLast(this.isFunc + "Heap[(int)" + index.ToString() + "] = " + valor+";");
+        }
+
+        public void addGetHeap(object target,object index)
+        {
+            this.code.AddLast(this.isFunc+target.ToString()+" = Heap[(int)"+index.ToString()+"];");
         }
         public void nextHeap()
         {

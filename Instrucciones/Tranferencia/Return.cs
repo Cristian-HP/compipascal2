@@ -21,7 +21,7 @@ namespace compipascal2.Instrucciones.Tranferencia
             this.valor = valor;
         }
 
-        public object generar(Entorno ent)
+        public object generar(Entorno ent, LinkedList<Errorp> errorps)
         {
             Retorno value = this.valor != null ? this.valor.resolver(ent) : new Retorno("0",false,new Utils.Type(Utils.Types.VOID));
             SimboloFuncion symfunc = ent.actualFunc;
