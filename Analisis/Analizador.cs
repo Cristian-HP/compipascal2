@@ -37,8 +37,19 @@ namespace compipascal2.Analisis
         {
             if (raiz == null)
             {
-                Errorp mi = new Errorp(0, 0, "ERROR Fatal No se Pudo Recuperar El analizador", "Analizador", "Gramatica");
+                Errorp mi = new Errorp(0, 0, "Analizador", "ERROR Fatal No se Pudo Recuperar El analizador", "Gramatica");
                 miserrores.AddLast(mi);
+                string tipoerro;
+                for (int i = 0; i < arbol.ParserMessages.Count; i++)
+                {
+                    if (arbol.ParserMessages[i].Message.Contains("Syntax"))
+                        tipoerro = "Sintactico";
+                    else
+                        tipoerro = "Lexico";
+                    Errorp mier = new Errorp(arbol.ParserMessages[i].Location.Line, arbol.ParserMessages[i].Location.Column, tipoerro, arbol.ParserMessages[i].Message, "Gramatica");
+                    miserrores.AddLast(mier);
+                    Form1.salida.AppendText(mier.ToString() + "\n");
+                }
                 Form1.salida.AppendText(mi.ToString() + "\n");
                 return false;
             }
@@ -51,7 +62,7 @@ namespace compipascal2.Analisis
                         tipoerro = "Sintactico";
                     else
                         tipoerro = "Lexico";
-                    Errorp mier = new Errorp(arbol.ParserMessages[i].Location.Line, arbol.ParserMessages[i].Location.Column, arbol.ParserMessages[i].Message, tipoerro, "Gramatica");
+                    Errorp mier = new Errorp(arbol.ParserMessages[i].Location.Line, arbol.ParserMessages[i].Location.Column, tipoerro, arbol.ParserMessages[i].Message,  "Gramatica");
                     miserrores.AddLast(mier);
                     Form1.salida.AppendText(mier.ToString() + "\n");
                 }

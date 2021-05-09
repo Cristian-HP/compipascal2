@@ -148,17 +148,14 @@ namespace compipascal2
 
         private void button3_Click(object sender, EventArgs e)
         {
-            graficarTabla();
+            LinkedList<Errorp> loserrores = analizador.miserrores;
+            if (Tablasim != null)
+                graficarTabla();
             if(reporte!= null)
-            {
                 reporte.Reporteht();
-            }
-            LinkedList<Errorp> loserrores= analizador.miserrores;
-
             if (loserrores != null)
-            {
                 graficar(loserrores);
-            }
+            
         }
 
         private void graficar(LinkedList<Errorp> errores)
